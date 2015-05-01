@@ -16,7 +16,7 @@ public class ChatClient {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        Client yo = new Client();
+        Client yo = new Client("127.0.0.1");
     }
     
 }
