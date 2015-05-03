@@ -1,8 +1,10 @@
-
+/* Μουστάκας Γεώργιος 321 / 2011 102
+   Χατζηαναστασιάδης Μιχαήλ Μάριος 321 / 2011 176
+   Σωτηρέλης Χρήστος 321 / 2012 182
+*/
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -33,7 +35,7 @@ public class Client extends Thread {
 
             SSLContext context = SSLContext.getInstance("SSL");
             //Περνάμε τα keystore και truststore καθως και το random number (για τη κρυπτογραφηση)
-            context.init(null, null, null);
+            context.init(null, null, new SecureRandom());
             sslFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         } catch (NoSuchAlgorithmException | KeyManagementException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -43,24 +45,19 @@ public class Client extends Thread {
         sock = (SSLSocket) sslFactory.createSocket(hostname, 6666);
         //Ορίζουμε τις κρυπτογραφικες σουίτες μόνο για SSL (για αποφυγή χρήσης άλλων ανεπιθύμητων κρυπτογραφικών σουιτών)
         String[] enabledsuites = sock.getEnabledCipherSuites();
-        String[] preferedsuites = {"SSL_RSA_WITH_RC4_128_SHA",
-            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
-            "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
-            "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-            "SSL_RSA_WITH_RC4_128_MD5"
-        };
+        String[] preferedsuites = {"SSL_DH_anon_WITH_RC4_128_MD5"};
 
         //τις τοποθετούμε στις ενεργές σουίτες
-        sock.setEnabledCipherSuites(sock.getSupportedCipherSuites());
+        sock.setEnabledCipherSuites(preferedsuites);
 
         //ξεκινάμε το handshake
         sock.startHandshake();
-
+        
+        // Αποηθηκεύουμε τις ροές
         out = new ObjectOutputStream(sock.getOutputStream());
         in = new ObjectInputStream(sock.getInputStream());
 
         try {
-
             do {
                 out.writeObject("START");
             } while (!((String) in.readObject()).equals("WAITING"));
@@ -71,19 +68,19 @@ public class Client extends Thread {
 
     }
 
+    // Μέθοδος αποστολής μηνύματος
     public void sendmsg(String s) {
-
         try {
-
+            // Αποστέλλουμε πρώτα ένα String Message και ύστερα το μήνυμα 
+            // που θέλουμε να στείλουμε
             out.writeObject("MESSAGE");
             out.writeObject(s);
-
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
+    // Μέθοδος που επιστρέφει άν υπάρχει ο χρήστης
     public String getEx() {
         return Ex;
     }
@@ -92,14 +89,16 @@ public class Client extends Thread {
     public void run() {
         try {
             String command;
+            
+            // Loop πρωτοκόλλου
             while ((command = (String) in.readObject()) != null) {
+                
                 if (command.equals("MESSAGE")) {
                     Message m = (Message) in.readObject();
                     System.out.println(m.getUsername() + " say: " + m.getMessage());
-                    CC.Message_display(m.getUsername(), m.getMessage());
-
+                    CC.Message_display(m.getUsername(), m.getMessage(), m.getTimestamp());
                 }
-                System.out.println("while run");
+                
                 if (command.equals("USERLIST")) {
                     CC.refresh_list((ArrayList<String>) in.readObject());
                     System.out.print("getting userlist");
@@ -109,30 +108,31 @@ public class Client extends Thread {
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
+    // Μέθοδος αποστολής του username στον server
     public void sendUsername() {
         try {
-
             out.writeObject("USERNAME");
             out.writeObject(CC.getusername());
+            
+            // Εφόσον ο χρήστης δεν υπάρχει
             if (((String) in.readObject()).equals("DOES NOT EXIST")) {
                 CC.panel_setVisible_false();
+                
+                // Κάνουμε εκκίνηση του thread για να ξεκινήσει το πρωτόκολλο
                 start();
             } else {
                 CC.lblEx_setVisible_true();
+                CC.lblPleaseInsert_setVisible_false();
             }
-
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
-
 }
-//κλάση για την ειδοποίηση νέας επιτυχούς χειραψίας
 
+// Βοηθητική Κλάση που μας ενημερώνει για την εξέλιξη του SSL Handshake
 abstract class MyHandshakeListener implements HandshakeCompletedListener {
 
     public void handshakeCompleted(HandshakeCompletedEvent e) {

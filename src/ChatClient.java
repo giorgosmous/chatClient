@@ -1,13 +1,19 @@
-
+/* Μουστάκας Γεώργιος 321 / 2011 102
+   Χατζηαναστασιάδης Μιχαήλ Μάριος 321 / 2011 176
+   Σωτηρέλης Χρήστος 321 / 2012 182
+*/
 import java.awt.Color;
 import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -19,11 +25,13 @@ public class ChatClient extends JFrame {
     //dhlwsh antikeimenwn gia ta stoixeia tou grafikou perivalontos
     private final JPanel contentPane;
     private JTextField username;
+    private JTextField hostnameTextField;
+
     private final JLabel lblUsername;
     private final JButton btnLogin;
     private JLabel lblPleaseInsert;
     private JLabel connectedUsers;
-    private final JLabel lblEx;
+    private JLabel lblEx;
     private JTextField textField;
     final JPanel panel;
     private Client yo;
@@ -54,8 +62,9 @@ public class ChatClient extends JFrame {
 
     }
 
-    public void Message_display(String U, String M) {
-        textArea_1.append(U + ": " + " " + M + "\n");
+    public void Message_display(String U, String M, String time) {
+        textArea_1.append(U + " | " + time
+                + " says:" + "\n" + M + "\n");
 
     }
 
@@ -86,17 +95,19 @@ public class ChatClient extends JFrame {
     public void lblPleaseInsert_setVisible_false() {
         lblPleaseInsert.setVisible(false);
     }
-    
+
+    //Συνάρτηση που ενημερώνει το gui με το πλήθος των συνδεδεμένων χρηστών
     public void updateConnectedUsers() {
         connectedUsers.setText("Connected Users: " + list.getItemCount());
+    }
+
+    private ChatClient getSelf() {
+        return this;
     }
 
     public ChatClient() throws IOException {
         //dimiourgia titlou sto parathiro
         super("Chat Room");
-
-        //dimiourgia antikeimenou tupou Client gia tin enarksi tou socket
-        yo = new Client(this, "localhost");
 
         textArea_1.setForeground(Color.blue.brighter());
         list = new List();
@@ -128,19 +139,28 @@ public class ChatClient extends JFrame {
         lblUsername.setBounds(346, 222, 77, 22);
         panel.add(lblUsername);
 
+        hostnameTextField = new JTextField("localhost");
+        hostnameTextField.setBounds(346, 290, 207, 22);
+        panel.add(hostnameTextField);
+        hostnameTextField.setColumns(10);
+
+        JLabel hostnameLabel = new JLabel("Hostname/IP Address: ");
+        hostnameLabel.setBounds(346, 268, 150, 22);
+        panel.add(hostnameLabel);
+
         btnLogin = new JButton("Login");
-        btnLogin.setBounds(456, 292, 97, 25);
+        btnLogin.setBounds(456, 330, 97, 25);
         panel.add(btnLogin);
 
         lblPleaseInsert = new JLabel("Please insert an username");
         lblPleaseInsert.setForeground(Color.RED);
-        lblPleaseInsert.setBounds(346, 270, 157, 22);
+        lblPleaseInsert.setBounds(346, 310, 170, 22);
         lblPleaseInsert.setVisible(false);
         panel.add(lblPleaseInsert);
 
-        lblEx = new JLabel("Exists");
+        lblEx = new JLabel("Username exists");
         lblEx.setForeground(Color.RED);
-        lblEx.setBounds(346, 270, 157, 22);
+        lblEx.setBounds(346, 310, 157, 22);
         lblEx.setVisible(false);
         panel.add(lblEx);
 
@@ -148,21 +168,38 @@ public class ChatClient extends JFrame {
         btnLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                //ean to pedio den einai keno proxwraei stin prgmatopoihsh tou login
+                //ean to pedio den einai keno proxwraei stin pragmatopoihsh tou login
                 if (!username.getText().equals("")) {
+                    try {
+                        if (panel.isVisible()) {
+                            if (lblWelcome != null) {
+                                lblWelcome.setText(null);
+                            }
+                            //dimiourgia antikeimenou tupou Client gia tin enarksi tou socket
+                            yo = new Client(getSelf(), hostnameTextField.getText());
+                        }
 
+                    } catch (java.net.UnknownHostException | java.net.NoRouteToHostException e) {
+                        JOptionPane.showMessageDialog(null, "Wrong Hostname / IP Address");
+                    } catch (IOException ex) {
+                        Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     panel.setVisible(true);
+
+                    //Στέλνουμε το username
                     yo.sendUsername();
+                    
+                    // Label που δείχνει το όνομα που έχουμε συνδεθεί
                     lblWelcome = new JLabel("You are connected as: " + username.getText());
                     lblWelcome.setForeground(Color.BLUE);
                     lblWelcome.setBounds(10, 565, 300, 30);
                     lblWelcome.setVisible(true);
                     contentPane.add(lblWelcome);
-                    //ena einai keno emfanizete katallilo minima
+
                 } else {
-
+                    // Ζητάμε απο τον χρήστη να γράψει κάποιο κείμενο
                     lblPleaseInsert.setVisible(true);
-
+                    lblEx.setVisible(false);
                 }
 
             }
@@ -209,7 +246,6 @@ public class ChatClient extends JFrame {
 
         btnSend.setBounds(488, 565, 115, 30);
         contentPane.add(btnSend);
-
     }
 
 }
