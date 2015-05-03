@@ -22,13 +22,15 @@ public class ChatClient extends JFrame {
     private final JLabel lblUsername;
     private final JButton btnLogin;
     private JLabel lblPleaseInsert;
+    private JLabel connectedUsers;
     private final JLabel lblEx;
     private JTextField textField;
     final JPanel panel;
     private Client yo;
-    final List list = new List();
+    final List list;
     final JTextArea textArea_1 = new JTextArea();
     final JTextArea textArea = new JTextArea();
+    private JLabel lblWelcome;
 
     //main klasi pou trexei to termatiko tou Client
     public static void main(String[] args) throws IOException {
@@ -53,7 +55,6 @@ public class ChatClient extends JFrame {
     }
 
     public void Message_display(String U, String M) {
-
         textArea_1.append(U + ": " + " " + M + "\n");
 
     }
@@ -85,14 +86,20 @@ public class ChatClient extends JFrame {
     public void lblPleaseInsert_setVisible_false() {
         lblPleaseInsert.setVisible(false);
     }
+    
+    public void updateConnectedUsers() {
+        connectedUsers.setText("Connected Users: " + list.getItemCount());
+    }
 
     public ChatClient() throws IOException {
         //dimiourgia titlou sto parathiro
         super("Chat Room");
 
         //dimiourgia antikeimenou tupou Client gia tin enarksi tou socket
-        yo = new Client(this, "192.168.1.6");
+        yo = new Client(this, "localhost");
 
+        textArea_1.setForeground(Color.blue.brighter());
+        list = new List();
         //stoixeia parathirou
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -141,12 +148,17 @@ public class ChatClient extends JFrame {
         btnLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-        //ean to pedio den einai keno proxwraei stin prgmatopoihsh tou login
+                //ean to pedio den einai keno proxwraei stin prgmatopoihsh tou login
                 if (!username.getText().equals("")) {
 
                     panel.setVisible(true);
                     yo.sendUsername();
-        //ena einai keno emfanizete katallilo minima
+                    lblWelcome = new JLabel("You are connected as: " + username.getText());
+                    lblWelcome.setForeground(Color.BLUE);
+                    lblWelcome.setBounds(10, 565, 300, 30);
+                    lblWelcome.setVisible(true);
+                    contentPane.add(lblWelcome);
+                    //ena einai keno emfanizete katallilo minima
                 } else {
 
                     lblPleaseInsert.setVisible(true);
@@ -171,11 +183,15 @@ public class ChatClient extends JFrame {
         contentPane.add(scrollbar);
 
         JScrollPane scrollbar_2 = new JScrollPane(list);
-        scrollbar_2.setBounds(609, 10, 265, 505);
+        scrollbar_2.setBounds(609, 30, 265, 486);
         contentPane.add(scrollbar_2);
 
+        connectedUsers = new JLabel();
+        connectedUsers.setBounds(609, 2, 265, 30);
+        contentPane.add(connectedUsers);
+
         JButton btnSend = new JButton("Send");
-        
+
         //ActionListener tou koumpiou pou kanei tin apostoli tou minimatos
         btnSend.addActionListener(new ActionListener() {
             @Override

@@ -103,6 +103,7 @@ public class Client extends Thread {
                 if (command.equals("USERLIST")) {
                     CC.refresh_list((ArrayList<String>) in.readObject());
                     System.out.print("getting userlist");
+                    CC.updateConnectedUsers();
                 }
             }
         } catch (IOException | ClassNotFoundException ex) {
