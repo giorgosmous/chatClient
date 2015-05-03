@@ -34,7 +34,7 @@ public class ChatClient extends JFrame {
     private JLabel lblEx;
     private JTextField textField;
     final JPanel panel;
-    private Client yo;
+    private Client client;
     final List list;
     final JTextArea textArea_1 = new JTextArea();
     final JTextArea textArea = new JTextArea();
@@ -176,7 +176,7 @@ public class ChatClient extends JFrame {
                                 lblWelcome.setText(null);
                             }
                             //dimiourgia antikeimenou tupou Client gia tin enarksi tou socket
-                            yo = new Client(getSelf(), hostnameTextField.getText());
+                            client = new Client(getSelf(), hostnameTextField.getText());
                         }
 
                     } catch (java.net.UnknownHostException | java.net.NoRouteToHostException e) {
@@ -187,7 +187,7 @@ public class ChatClient extends JFrame {
                     panel.setVisible(true);
 
                     //Στέλνουμε το username
-                    yo.sendUsername();
+                    client.sendUsername();
                     
                     // Label που δείχνει το όνομα που έχουμε συνδεθεί
                     lblWelcome = new JLabel("You are connected as: " + username.getText());
@@ -236,7 +236,7 @@ public class ChatClient extends JFrame {
                 //den epitrepei ton xristi na steilei keno minima
                 if (!textArea.getText().equals("")) {
 
-                    yo.sendmsg(textArea.getText());
+                    client.sendmsg(textArea.getText());
                     textArea.setText("");
 
                 }

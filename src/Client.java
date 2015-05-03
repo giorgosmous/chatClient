@@ -22,13 +22,13 @@ public class Client extends Thread {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private final SSLSocket sock;
-    ChatClient CC;
+    ChatClient chatclient;
     String Ex;
     private static SSLSocketFactory sslFactory;
 
     public Client(ChatClient Ch, String hostname) throws IOException {
 
-        CC = Ch;
+        chatclient = Ch;
 
         try {
             //Δημιουργούμε αντικειμενο SSLContext που περιέχει τα στοιχεία της σύνδεσης
@@ -96,13 +96,13 @@ public class Client extends Thread {
                 if (command.equals("MESSAGE")) {
                     Message m = (Message) in.readObject();
                     System.out.println(m.getUsername() + " say: " + m.getMessage());
-                    CC.Message_display(m.getUsername(), m.getMessage(), m.getTimestamp());
+                    chatclient.Message_display(m.getUsername(), m.getMessage(), m.getTimestamp());
                 }
                 
                 if (command.equals("USERLIST")) {
-                    CC.refresh_list((ArrayList<String>) in.readObject());
+                    chatclient.refresh_list((ArrayList<String>) in.readObject());
                     System.out.print("getting userlist");
-                    CC.updateConnectedUsers();
+                    chatclient.updateConnectedUsers();
                 }
             }
         } catch (IOException | ClassNotFoundException ex) {
@@ -114,17 +114,17 @@ public class Client extends Thread {
     public void sendUsername() {
         try {
             out.writeObject("USERNAME");
-            out.writeObject(CC.getusername());
+            out.writeObject(chatclient.getusername());
             
             // Εφόσον ο χρήστης δεν υπάρχει
             if (((String) in.readObject()).equals("DOES NOT EXIST")) {
-                CC.panel_setVisible_false();
+                chatclient.panel_setVisible_false();
                 
                 // Κάνουμε εκκίνηση του thread για να ξεκινήσει το πρωτόκολλο
                 start();
             } else {
-                CC.lblEx_setVisible_true();
-                CC.lblPleaseInsert_setVisible_false();
+                chatclient.lblEx_setVisible_true();
+                chatclient.lblPleaseInsert_setVisible_false();
             }
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
